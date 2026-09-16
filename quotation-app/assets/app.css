@@ -158,6 +158,7 @@ textarea { resize: vertical; min-height: 80px; }
 .print-brand img { display: block; max-width: 140px; max-height: 58px; }
 .print-brand > strong { justify-self: end; color: var(--green); font-size: 20px; letter-spacing: .12em; }
 .print-meta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0; }
+.print-meta.making-meta { grid-template-columns: repeat(3, 1fr); }
 .print-meta div { padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; }
 .print-meta span, .print-meta strong { display: block; }
 .print-meta span { color: var(--muted); font-size: 9px; text-transform: uppercase; }
@@ -178,6 +179,26 @@ textarea { resize: vertical; min-height: 80px; }
 .print-terms ol { margin: 6px 0 0 18px; padding: 0; }
 .print-terms li { margin: 3px 0; }
 .print-footer { display: block; margin-top: 18px; padding-top: 8px; border-top: 1px solid var(--line); color: var(--muted); text-align: center; line-height: 1.45; }
+.payment-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px; }
+.payment-stats > div { padding: 12px; border: 1px solid var(--line); border-radius: 9px; background: #f8faf8; }
+.payment-stats span, .payment-stats strong { display: block; }
+.payment-stats span { margin-bottom: 5px; color: var(--muted); font-size: 10px; text-transform: uppercase; }
+.payment-stats strong { font-size: 16px; }
+.invoice-payment-modal { width: min(900px, 100%); }
+.print-payments { margin: 16px 0; break-inside: avoid; }
+.print-payments h2 { margin: 0 0 7px; color: var(--green); font-size: 13px; }
+.print-payments table { font-size: 9px; }
+.print-payments th, .print-payments td { padding: 5px 4px; white-space: normal; }
+.print-payments thead th { background: #edf3f0; color: var(--green); }
+.print-document.making .print-room th { font-size: 10px; }
+.print-document.making .print-room td { font-size: 12px; font-weight: 600; line-height: 1.35; }
+.making-fabric-summary { margin-top: 20px; break-inside: avoid; }
+.making-fabric-summary h2 { margin: 0 0 7px; color: var(--green); font-size: 15px; }
+.making-fabric-summary table { font-size: 11px; }
+.making-fabric-summary th, .making-fabric-summary td { padding: 7px 6px; white-space: normal; }
+.making-fabric-summary thead th { background: var(--green); color: #fff; }
+.making-fabric-summary tfoot th { background: #edf3f0; color: var(--green); text-align: right; }
+.making-fabric-summary p { margin: 6px 0 0; color: var(--muted); font-size: 9px; }
 
 @media print {
   @page { size: A4 portrait; margin: 9mm; }
@@ -190,6 +211,9 @@ textarea { resize: vertical; min-height: 80px; }
   .print-meta { margin: 8px 0; }
   .print-room { margin: 9px 0; }
   .print-room th, .print-room td { padding: 3px; }
+  .print-document.making .print-room th { font-size: 9.5px; }
+  .print-document.making .print-room td { font-size: 11px; }
+  .making-fabric-summary th, .making-fabric-summary td { padding: 4px; }
   .print-customer, .print-offer, .print-note, .print-terms { margin: 8px 0; }
   .print-footer { margin-top: 10px; }
 }
@@ -219,6 +243,7 @@ textarea { resize: vertical; min-height: 80px; }
 @media (max-width: 780px) {
   .line-item:not(.column-labels) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .field-modelCode, .field-design, .field-source, .field-total { grid-column: span 2; }
+  .payment-stats { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 480px) {
   .line-item:not(.column-labels) { grid-template-columns: 1fr; }

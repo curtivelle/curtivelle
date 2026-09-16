@@ -3,8 +3,10 @@
 
   const CURRENCY = new Intl.NumberFormat('en-BD', { style: 'currency', currency: 'BDT', maximumFractionDigits: 2 });
   const DATE = new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium' });
+  const BN_DATE = new Intl.DateTimeFormat('bn-BD', { dateStyle: 'medium' });
   const DEFAULT_TERMS = `1. Quotation validity: 15 days from issue date.\n2. Custom designs cannot be changed after approval and production start.\n3. Advance payments and custom-made products are non-refundable.\n4. Final measurements must be verified before production; customer-provided measurements remain the customer's responsibility.\n5. Installation schedule depends on site readiness and access.\n6. Products remain the property of Curtivelle until full payment is received.\n7. Delivery must be made within 1 month of production.`;
   const PRODUCTS = Array.isArray(window.CURTIVELLE_PRODUCTS) ? window.CURTIVELLE_PRODUCTS : [];
+  const TASSELS = Array.isArray(window.CURTIVELLE_TASSELS) ? window.CURTIVELLE_TASSELS : [];
   const LINE_LABELS = { modelCode: 'প্রোডাক্ট', height: 'হাইট (ইঞ্চি)', width: 'উইডথ (ইঞ্চি)', pleatCount: 'ফোল্ড', yards: 'ফেব্রিক (ইয়ার্ড)', yardPrice: 'প্রতি ইয়ার্ড মূল্য', design: 'ডিজাইন (ঐচ্ছিক)', designRate: 'ডিজাইন রেট', pieces: 'পিস', source: 'নোট', total: 'টোটাল' };
   const BUSINESS_ADDRESS = 'Amanullah Trade Center (7th Floor), Gulshan Avenue, Circle-02, Gulshan-02, Dhaka, Bangladesh, 1212';
   const normalizeProductCode = value => String(value || '').trim().replace(/^start?\s+/i, '* ');
@@ -17,6 +19,7 @@
   const n = (value) => Number(value) || 0;
   const money = (value) => CURRENCY.format(n(value)).replace('BDT', '৳');
   const dateText = (value) => value ? DATE.format(new Date(value)) : '—';
+  const bnDateText = (value) => value ? BN_DATE.format(new Date(value)) : '—';
   const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
   const clone = (value) => JSON.parse(JSON.stringify(value));
   const today = () => new Date().toISOString().slice(0, 10);
@@ -114,7 +117,7 @@
     return `<div class="table-wrap"><table><thead><tr>${isCustomers ? '<th>Customer ID</th><th>নাম</th><th>ফোন</th>' : '<th>নম্বর</th><th>কাস্টমার</th><th>তারিখ</th><th>টোটাল</th><th>স্ট্যাটাস</th>'}<th class="no-print">অ্যাকশন</th></tr></thead><tbody>${rows.map(row => `<tr>${isCustomers
       ? `<td>${escapeHtml(row.customerNo)}</td><td>${escapeHtml(row.name)}</td><td>${escapeHtml(row.phone)}</td>`
       : `<td>${escapeHtml(row.number)}</td><td>${escapeHtml(row.customer?.name)}</td><td>${dateText(row.date)}</td><td>${money(row.grandTotal)}</td><td>${statusBadge(row.status)}</td>`}
-      <td class="actions no-print">${type === 'quotations' ? `<a class="btn btn-secondary" href="#quotation/${row.id}">খুলুন</a>` : ''}${type === 'invoices' ? `<button class="btn btn-secondary" data-print="${row.id}">প্রিন্ট</button>` : ''}<button class="btn btn-danger" data-delete="${type}:${row.id}">ডিলিট</button></td></tr>`).join('')}</tbody></table></div>`;
+      <td class="actions no-print">${type === 'quotations' ? `<a class="btn btn-secondary" href="#quotation/${row.id}">খুলুন</a>` : ''}${type === 'invoices' ? `<button class="btn btn-secondary" data-print="${row.id}">পেমেন্ট / প্রিন্ট</button>` : ''}<button class="btn btn-danger" data-delete="${type}:${row.id}">ডিলিট</button></td></tr>`).join('')}</tbody></table></div>`;
   }
 
   async function listPage(type) {
@@ -287,7 +290,8 @@
         const row = $('#extraItemTemplate').content.firstElementChild.cloneNode(true);
         const productInput = $('[data-field="description"]', row);
         if (key === 'extraFabric') { productInput.setAttribute('list', 'productOptions'); productInput.placeholder = 'প্রোডাক্ট নির্বাচন করুন'; }
-        $$('[data-field]', row).forEach(input => { const field = input.dataset.field; if (input.tagName === 'OUTPUT') input.textContent = money(item.total); else { input.value = item[field] ?? ''; input.oninput = () => { item[field] = field === 'description' && key === 'extraFabric' ? normalizeProductCode(input.value) : input.value; if (field === 'description' && key === 'extraFabric') { input.value = item[field]; const product = PRODUCTS.find(p => p.code.toLowerCase() === item[field].toLowerCase()); if (product) { item.unitPrice = product.yardPrice; item.unit = 'yard'; $('[data-field="unitPrice"]', row).value = item.unitPrice; $('[data-field="unit"]', row).value = item.unit; } } calculateQuote(quote); }; } });
+        if (key === 'accessories') { productInput.setAttribute('list', 'tasselOptions'); productInput.placeholder = 'ট্যাসেল/অ্যাক্সেসরি নির্বাচন করুন'; }
+        $$('[data-field]', row).forEach(input => { const field = input.dataset.field; if (input.tagName === 'OUTPUT') input.textContent = money(item.total); else { input.value = item[field] ?? ''; input.oninput = () => { item[field] = field === 'description' && key === 'extraFabric' ? normalizeProductCode(input.value) : input.value; if (field === 'description' && key === 'extraFabric') { input.value = item[field]; const product = PRODUCTS.find(p => p.code.toLowerCase() === item[field].toLowerCase()); if (product) { item.unitPrice = product.yardPrice; item.unit = 'yard'; $('[data-field="unitPrice"]', row).value = item.unitPrice; $('[data-field="unit"]', row).value = item.unit; } } if (field === 'description' && key === 'accessories') { const product = TASSELS.find(p => p.code.toLowerCase() === item[field].trim().toLowerCase()); if (product) { item.unitPrice = product.price; item.unit = product.unit; $('[data-field="unitPrice"]', row).value = item.unitPrice; $('[data-field="unit"]', row).value = item.unit; } } calculateQuote(quote); }; } });
         $('.remove-row', row).onclick = () => { room[key].splice(index, 1); render(); calculateQuote(quote); };
         rows.appendChild(row);
       });
@@ -341,48 +345,124 @@
     const invoices = await state.store.list('invoices');
     const duplicate = invoices.find(x => x.quotationId === quote.id);
     if (duplicate) return showInvoice(duplicate);
-    const invoice = { ...clone(quote), id: uid('INVOICE'), number: await state.store.nextNumber('invoice'), quotationId: quote.id, quotationNumber: quote.number, date: today(), status: quote.dueAmount <= 0 ? 'paid' : quote.advanceReceived > 0 ? 'partial' : 'pending' };
+    const initialPayment = n(quote.advanceReceived) > 0 ? [{ id: uid('PAY'), date: quote.date || today(), amount: n(quote.advanceReceived), method: 'Advance', reference: quote.number, note: 'Quotation advance payment', createdAt: new Date().toISOString() }] : [];
+    const invoice = { ...clone(quote), id: uid('INVOICE'), number: await state.store.nextNumber('invoice'), quotationId: quote.id, quotationNumber: quote.number, date: today(), payments: initialPayment, totalPaid: n(quote.advanceReceived), status: quote.dueAmount <= 0 ? 'paid' : quote.advanceReceived > 0 ? 'partial' : 'pending' };
     await state.store.save('invoices', invoice); await state.store.save('quotations', { ...quote, status: 'approved', invoiceId: invoice.id }); toast('ইনভয়েস তৈরি হয়েছে'); showInvoice(invoice);
   }
 
   function showInvoice(invoice) {
-    openPrintDocument(invoice, 'invoice');
+    normalizeInvoicePayments(invoice);
+    $('#modalRoot').innerHTML = `<div class="modal-backdrop"><div class="modal invoice-payment-modal"><div class="card-head"><h2>${escapeHtml(invoice.number)} · Installments</h2><button class="icon-btn" id="closeModal">×</button></div>
+      <div class="payment-stats"><div><span>Invoice total</span><strong>${money(invoice.grandTotal)}</strong></div><div><span>Total paid</span><strong>${money(invoice.totalPaid)}</strong></div><div><span>Remaining due</span><strong>${money(invoice.dueAmount)}</strong></div><div><span>Status</span>${statusBadge(invoice.status)}</div></div>
+      <form id="installmentForm" class="form-grid"><label>Date<input name="date" type="date" value="${today()}" required></label><label>Amount<input name="amount" type="number" min="0.01" max="${Math.max(0, invoice.dueAmount)}" step="0.01" required></label><label>Method<select name="method"><option>Cash</option><option>Bank Transfer</option><option>Card</option><option>bKash</option><option>Nagad</option><option>Cheque</option><option>Other</option></select></label><label>Reference<input name="reference" placeholder="Txn/Cheque reference"></label><label class="span-4">Note (optional)<input name="note" placeholder="Installment note"></label><div class="span-4 actions"><button class="btn btn-primary" ${invoice.dueAmount <= 0 ? 'disabled' : ''}>Add installment</button><button class="btn btn-secondary" type="button" id="invoicePrint">Invoice PDF</button></div></form>
+      <div class="section-title"><h2>Payment history</h2></div>${paymentHistoryTable(invoice, true)}</div></div>`;
+    $('#closeModal').onclick = () => $('#modalRoot').innerHTML = '';
+    $('#invoicePrint').onclick = () => openPrintDocument(invoice, 'invoice');
+    $('#installmentForm').onsubmit = async event => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const amount = n(form.elements.amount.value);
+      if (amount <= 0) return toast('Installment amount must be greater than zero');
+      if (amount > invoice.dueAmount + 0.001) return toast(`Maximum payable amount is ${money(invoice.dueAmount)}`);
+      invoice.payments.push({ id: uid('PAY'), date: form.elements.date.value, amount, method: form.elements.method.value, reference: form.elements.reference.value.trim(), note: form.elements.note.value.trim(), createdAt: new Date().toISOString() });
+      normalizeInvoicePayments(invoice);
+      await state.store.save('invoices', invoice);
+      toast('Installment payment saved');
+      showInvoice(invoice);
+    };
+    $$('[data-remove-payment]').forEach(button => button.onclick = async () => {
+      if (!confirm('এই installment payment সরাবেন? Invoice version history-তে আগের তথ্য থাকবে।')) return;
+      invoice.payments = invoice.payments.filter(payment => payment.id !== button.dataset.removePayment);
+      normalizeInvoicePayments(invoice);
+      await state.store.save('invoices', invoice);
+      toast('Payment removed');
+      showInvoice(invoice);
+    });
+  }
+
+  function normalizeInvoicePayments(invoice) {
+    if (!Array.isArray(invoice.payments)) {
+      invoice.payments = n(invoice.advanceReceived) > 0 ? [{ id: `PAY-ADVANCE-${invoice.id}`, date: invoice.date || today(), amount: n(invoice.advanceReceived), method: 'Advance', reference: invoice.quotationNumber || '', note: 'Imported opening advance' }] : [];
+    }
+    invoice.totalPaid = invoice.payments.reduce((sum, payment) => sum + n(payment.amount), 0);
+    invoice.advanceReceived = invoice.totalPaid;
+    invoice.dueAmount = Math.max(0, n(invoice.grandTotal) - invoice.totalPaid);
+    invoice.status = invoice.dueAmount <= 0.001 ? 'paid' : invoice.totalPaid > 0 ? 'partial' : 'pending';
+    return invoice;
+  }
+
+  function paymentHistoryTable(invoice, editable = false) {
+    const payments = Array.isArray(invoice.payments) ? invoice.payments : [];
+    if (!payments.length) return '<div class="empty">এখনও কোনো payment নেই</div>';
+    return `<div class="table-wrap payment-history"><table><thead><tr><th>#</th><th>Date</th><th>Method</th><th>Reference</th><th>Note</th><th>Amount</th>${editable ? '<th>Action</th>' : ''}</tr></thead><tbody>${payments.map((payment, index) => `<tr><td>${index + 1}</td><td>${dateText(payment.date)}</td><td>${escapeHtml(payment.method)}</td><td>${escapeHtml(payment.reference)}</td><td>${escapeHtml(payment.note)}</td><td><strong>${money(payment.amount)}</strong></td>${editable ? `<td><button class="icon-btn danger" type="button" data-remove-payment="${escapeHtml(payment.id)}" aria-label="Remove payment">×</button></td>` : ''}</tr>`).join('')}</tbody></table></div>`;
   }
 
   const meaningful = item => Boolean(String(item?.modelCode || item?.description || item?.design || item?.source || '').trim()) || n(item?.height) > 0 || n(item?.width) > 0 || n(item?.yards) > 0 || n(item?.unitPrice) > 0 || n(item?.total) > 0;
   const cell = value => escapeHtml(value == null ? '' : value);
+  const MAKING_SECTION_LABELS = { Curtain: 'কার্টেন', Sheer: 'শিয়ার', 'Extra Fabric': 'এক্সট্রা ফেব্রিক', Fittings: 'ফিটিংস', Accessories: 'অ্যাক্সেসরিজ' };
+  const MAKING_ROOM_LABELS = { 'Master Bedroom': 'মাস্টার বেডরুম', 'Living Room': 'লিভিং রুম', 'Dining Room': 'ডাইনিং রুম', 'Kids Room': 'কিডস রুম', 'Guest Bedroom': 'গেস্ট বেডরুম', 'Study Room': 'স্টাডি রুম', 'Family Living': 'ফ্যামিলি লিভিং', Kitchen: 'কিচেন', Office: 'অফিস', 'Prayer Room': 'নামাজের ঘর' };
+  const makingRoomName = name => MAKING_ROOM_LABELS[name] || name;
   function itemRows(room, making) {
     const sections = [];
     [['curtains','Curtain'], ['sheers','Sheer']].forEach(([key, label]) => {
       const items = (room[key] || []).filter(meaningful);
       if (!items.length) return;
-      sections.push(`<tr class="print-section"><th colspan="${making ? 7 : 10}">${label}</th></tr>`);
+      sections.push(`<tr class="print-section"><th colspan="${making ? 7 : 10}">${making ? MAKING_SECTION_LABELS[label] : label}</th></tr>`);
       items.forEach(item => sections.push(`<tr><td>${cell(normalizeProductCode(item.modelCode))}</td><td>${cell(item.width)}</td><td>${cell(item.height)}</td><td>${cell(item.pleatCount)}</td><td>${cell(item.yards)}</td><td>${cell(item.design)}</td><td>${cell(item.pieces)}</td>${making ? '' : `<td>${cell(item.source)}</td><td>${money(item.yardPrice)}</td><td>${money(item.total)}</td>`}</tr>`));
     });
     [['extraFabric','Extra Fabric'], ['fittings','Fittings'], ['accessories','Accessories']].forEach(([key, label]) => {
       const items = (room[key] || []).filter(meaningful);
       if (!items.length) return;
-      sections.push(`<tr class="print-section"><th colspan="${making ? 7 : 10}">${label}</th></tr>`);
+      sections.push(`<tr class="print-section"><th colspan="${making ? 7 : 10}">${making ? MAKING_SECTION_LABELS[label] : label}</th></tr>`);
       items.forEach(item => sections.push(`<tr><td colspan="3">${cell(normalizeProductCode(item.description))}</td><td></td><td>${cell(item.quantity)}</td><td>${cell(item.unit)}</td><td></td>${making ? '' : `<td></td><td>${money(item.unitPrice)}</td><td>${money(item.total)}</td>`}</tr>`));
     });
     return sections.join('');
   }
 
+  function makingFabricSummary(record) {
+    const totals = new Map();
+    (record.rooms || []).forEach(room => {
+      const extraByProduct = new Map();
+      (room.extraFabric || []).filter(meaningful).forEach(extra => {
+        const code = normalizeProductCode(extra.description).toLowerCase();
+        if (code) extraByProduct.set(code, n(extra.quantity) > 0 ? n(extra.quantity) : 1);
+      });
+      ['curtains', 'sheers'].forEach(key => (room[key] || []).filter(meaningful).forEach(item => {
+        const product = normalizeProductCode(item.modelCode) || 'নামবিহীন প্রোডাক্ট';
+        const multiplier = extraByProduct.get(product.toLowerCase()) || 1;
+        const yards = n(item.yards);
+        const pieces = n(item.pieces) || 1;
+        const total = yards * pieces * multiplier;
+        const current = totals.get(product) || { product, calculations: [], total: 0 };
+        current.calculations.push(`${yards} × ${pieces} × ${multiplier}`);
+        current.total += total;
+        totals.set(product, current);
+      }));
+    });
+    if (!totals.size) return '';
+    const rows = [...totals.values()].map(item => `<tr><td>${cell(item.product)}</td><td>${item.calculations.join(' + ')}</td><td><strong>${item.total.toFixed(4).replace(/0+$/, '').replace(/\.$/, '')}</strong></td></tr>`).join('');
+    const grand = [...totals.values()].reduce((sum, item) => sum + item.total, 0);
+    return `<section class="making-fabric-summary"><h2>মোট ফেব্রিক হিসাব</h2><table><thead><tr><th>প্রোডাক্ট</th><th>হিসাব: ফেব্রিক × পিস × এক্সট্রা ইউনিট</th><th>মোট ফেব্রিক (ইয়ার্ড)</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><th colspan="2">সর্বমোট ফেব্রিক</th><th>${grand.toFixed(4).replace(/0+$/, '').replace(/\.$/, '')} ইয়ার্ড</th></tr></tfoot></table><p>এক্সট্রা ফেব্রিক না থাকলে ইউনিট ১ ধরা হয়েছে।</p></section>`;
+  }
+
   function printDocumentHtml(record, kind) {
     const making = kind === 'making';
-    const title = making ? 'MAKING SHEET' : kind === 'invoice' ? 'INVOICE' : 'QUOTATION';
-    const numberLabel = making ? 'Quotation Ref.' : title.charAt(0) + title.slice(1).toLowerCase() + ' No.';
+    if (kind === 'invoice') normalizeInvoicePayments(record);
+    const title = making ? 'মেকিং শিট' : kind === 'invoice' ? 'INVOICE' : 'QUOTATION';
+    const numberLabel = making ? 'কোটেশন রেফারেন্স' : title.charAt(0) + title.slice(1).toLowerCase() + ' No.';
     const discountPercent = n(record.discountPercent);
     const discountAmount = n(record.discountAmount);
     const terms = String(record.terms || '').split(/\n+/).filter(Boolean).map(x => `<li>${escapeHtml(x.replace(/^\s*\d+[.)]\s*/, ''))}</li>`).join('');
-    return `<article class="print-document">
+    return `<article class="print-document${making ? ' making' : ''}">
       <header class="print-brand"><img src="../assets/img/logo/logo-01.svg" alt="Curtivelle"><strong>${title}</strong></header>
-      <section class="print-meta"><div><span>${numberLabel}</span><strong>${escapeHtml(record.number)}</strong></div><div><span>Date</span><strong>${dateText(record.date)}</strong></div><div><span>Delivery Date</span><strong>${record.deliveryDate ? dateText(record.deliveryDate) : ''}</strong></div><div><span>Valid Until</span><strong>${kind === 'quotation' ? dateText(record.validUntil) : ''}</strong></div></section>
+      <section class="print-meta${making ? ' making-meta' : ''}"><div><span>${numberLabel}</span><strong>${escapeHtml(record.number)}</strong></div><div><span>${making ? 'তারিখ' : 'Date'}</span><strong>${making ? bnDateText(record.date) : dateText(record.date)}</strong></div><div><span>${making ? 'ডেলিভারি তারিখ' : 'Delivery Date'}</span><strong>${record.deliveryDate ? (making ? bnDateText(record.deliveryDate) : dateText(record.deliveryDate)) : ''}</strong></div>${making ? '' : `<div><span>Valid Until</span><strong>${kind === 'quotation' ? dateText(record.validUntil) : ''}</strong></div>`}</section>
       ${making ? '' : `<section class="print-customer"><h2>Customer</h2><p><strong>${cell(record.customer?.name)}</strong>${record.customer?.phone ? ` · ${cell(record.customer.phone)}` : ''}</p>${record.customer?.profession ? `<p>${cell(record.customer.profession)}</p>` : ''}${record.customer?.address ? `<p>${cell(record.customer.address)}</p>` : ''}</section>`}
       ${record.offer && !making ? `<section class="print-offer"><strong>Offer</strong><p>${escapeHtml(record.offer)}</p></section>` : ''}
-      ${(record.rooms || []).map(room => `<section class="print-room"><h2>${cell(room.name)}</h2><table><thead><tr><th>Product</th><th>Width (in)</th><th>Height (in)</th><th>Fold</th><th>Yard/Qty</th><th>Design/Unit</th><th>Pieces</th>${making ? '' : '<th>Note</th><th>Yard Price</th><th>Total</th>'}</tr></thead><tbody>${itemRows(room, making)}</tbody>${making ? '' : `<tfoot><tr><th colspan="9">Room Total</th><th>${money(room.total)}</th></tr></tfoot>`}</table></section>`).join('')}
-      ${making ? '' : `<section class="print-totals"><div><span>Subtotal</span><strong>${money(record.subtotal)}</strong></div>${discountPercent > 0 ? `<div><span>Discount (${discountPercent}%)</span><strong>− ${money(discountAmount)}</strong></div>` : ''}<div class="grand"><span>Grand Total</span><strong>${money(record.grandTotal)}</strong></div><div><span>Advance Received</span><strong>${money(record.advanceReceived)}</strong></div><div><span>Due Amount</span><strong>${money(record.dueAmount)}</strong></div></section>`}
-      ${record.notes ? `<section class="print-note"><strong>Notes</strong><p>${escapeHtml(record.notes)}</p></section>` : ''}
+      ${(record.rooms || []).map(room => `<section class="print-room"><h2>${cell(making ? makingRoomName(room.name) : room.name)}</h2><table><thead><tr><th>${making ? 'প্রোডাক্ট' : 'Product'}</th><th>${making ? 'প্রস্থ (ইঞ্চি)' : 'Width (in)'}</th><th>${making ? 'উচ্চতা (ইঞ্চি)' : 'Height (in)'}</th><th>${making ? 'ফোল্ড' : 'Fold'}</th><th>${making ? 'ইয়ার্ড/পরিমাণ' : 'Yard/Qty'}</th><th>${making ? 'ডিজাইন/ইউনিট' : 'Design/Unit'}</th><th>${making ? 'পিস' : 'Pieces'}</th>${making ? '' : '<th>Note</th><th>Yard Price</th><th>Total</th>'}</tr></thead><tbody>${itemRows(room, making)}</tbody>${making ? '' : `<tfoot><tr><th colspan="9">Room Total</th><th>${money(room.total)}</th></tr></tfoot>`}</table></section>`).join('')}
+      ${making ? makingFabricSummary(record) : ''}
+      ${making ? '' : `<section class="print-totals"><div><span>Subtotal</span><strong>${money(record.subtotal)}</strong></div>${discountPercent > 0 ? `<div><span>Discount (${discountPercent}%)</span><strong>− ${money(discountAmount)}</strong></div>` : ''}<div class="grand"><span>Grand Total</span><strong>${money(record.grandTotal)}</strong></div><div><span>${kind === 'invoice' ? 'Total Paid' : 'Advance Received'}</span><strong>${money(kind === 'invoice' ? record.totalPaid : record.advanceReceived)}</strong></div><div><span>Due Amount</span><strong>${money(record.dueAmount)}</strong></div></section>`}
+      ${kind === 'invoice' && record.payments?.length ? `<section class="print-payments"><h2>Installment Payment History</h2>${paymentHistoryTable(record)}</section>` : ''}
+      ${record.notes ? `<section class="print-note"><strong>${making ? 'নোট' : 'Notes'}</strong><p>${escapeHtml(record.notes)}</p></section>` : ''}
       ${!making && record.paymentTerms ? `<section class="print-terms"><h2>Payment Terms</h2><p>${escapeHtml(record.paymentTerms)}</p></section>` : ''}
       ${!making && terms ? `<section class="print-terms"><h2>Terms & Conditions</h2><ol>${terms}</ol></section>` : ''}
       <footer class="print-footer"><span>${BUSINESS_ADDRESS}</span></footer>
@@ -437,6 +517,7 @@
   }
 
   $('#productOptions').innerHTML = PRODUCTS.map(product => `<option value="${escapeHtml(product.code)}">${escapeHtml(product.source)} · ৳${product.yardPrice}/yd</option>`).join('');
+  $('#tasselOptions').innerHTML = TASSELS.map(product => `<option value="${escapeHtml(product.code)}">৳${product.price} · ${escapeHtml(product.unit)}</option>`).join('');
   setStore();
   window.addEventListener('hashchange', route);
   $('#quickQuotation').onclick = () => location.hash = '#quotation/new';
