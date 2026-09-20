@@ -203,7 +203,7 @@
           <label class="span-4">Notes (optional)<textarea name="notes" placeholder="ফাঁকা রাখলে print-এ দেখাবে না">${escapeHtml(quote.notes)}</textarea></label>
         </div></section>
       </div>
-      <aside class="card quote-summary"><div class="card-head"><h2>Project Summary</h2></div><div id="roomSummary"></div><div class="summary-line"><span>Subtotal</span><strong id="subtotal">৳0</strong></div><div class="summary-line" id="discountRow" hidden><span>Discount</span><strong id="discountTotal">৳0</strong></div><div class="summary-line grand"><span>Grand total</span><strong id="grandTotal">৳0</strong></div><div class="summary-line"><span>Advance</span><strong id="advanceTotal">৳0</strong></div><div class="summary-line due"><span>Due amount</span><strong id="dueTotal">৳0</strong></div><div class="actions no-print" style="margin-top:18px"><button class="btn btn-primary" type="submit">সেভ করুন</button>${id ? '<button class="btn btn-secondary" type="button" id="convertInvoice">Convert to Invoice</button><button class="btn btn-secondary" type="button" id="printQuote">Quotation PDF</button><button class="btn btn-secondary" type="button" id="printMaking">Making PDF</button>' : ''}</div></aside>
+      <aside class="card quote-summary"><div class="card-head"><h2>Project Summary</h2></div><div id="roomSummary"></div><div class="summary-line"><span>Subtotal</span><strong id="subtotal">৳0</strong></div><div class="summary-line" id="discountRow" hidden><span>Discount</span><strong id="discountTotal">৳0</strong></div><div class="summary-line grand"><span>Grand total</span><strong id="grandTotal">৳0</strong></div><div class="summary-line"><span>Advance</span><strong id="advanceTotal">৳0</strong></div><div class="summary-line due"><span>Due amount</span><strong id="dueTotal">৳0</strong></div><div class="actions no-print" style="margin-top:18px"><button class="btn btn-primary" type="submit">সেভ করুন</button>${id ? '<button class="btn btn-secondary" type="button" id="convertInvoice">Convert to Invoice</button><button class="btn btn-secondary" type="button" id="printQuote">Quotation PDF</button><button class="btn btn-secondary" type="button" id="printMaking">Making PDF</button><button class="btn btn-secondary" type="button" id="printChallan">Challan PDF</button>' : ''}</div></aside>
     </form>`;
 
     const roomsRoot = $('#rooms');
@@ -214,6 +214,7 @@
     if ($('#convertInvoice')) $('#convertInvoice').onclick = async () => convertToInvoice(quote);
     if ($('#printQuote')) $('#printQuote').onclick = () => openPrintDocument(quote, 'quotation');
     if ($('#printMaking')) $('#printMaking').onclick = () => openPrintDocument(quote, 'making');
+    if ($('#printChallan')) $('#printChallan').onclick = () => openPrintDocument(quote, 'challan');
     renderRooms();
   }
 
@@ -264,9 +265,7 @@
                   item.yardPrice = product.yardPrice;
                   item.catalogUnitPrice = product.unitPrice;
                   item.gsm = product.gsm || '';
-                  item.source = product.source;
                   $('[data-field="yardPrice"]', row).value = item.yardPrice;
-                  $('[data-field="source"]', row).value = item.source;
                 }
               }
               calculateQuote(quote);
@@ -354,10 +353,11 @@
     normalizeInvoicePayments(invoice);
     $('#modalRoot').innerHTML = `<div class="modal-backdrop"><div class="modal invoice-payment-modal"><div class="card-head"><h2>${escapeHtml(invoice.number)} · Installments</h2><button class="icon-btn" id="closeModal">×</button></div>
       <div class="payment-stats"><div><span>Invoice total</span><strong>${money(invoice.grandTotal)}</strong></div><div><span>Total paid</span><strong>${money(invoice.totalPaid)}</strong></div><div><span>Remaining due</span><strong>${money(invoice.dueAmount)}</strong></div><div><span>Status</span>${statusBadge(invoice.status)}</div></div>
-      <form id="installmentForm" class="form-grid"><label>Date<input name="date" type="date" value="${today()}" required></label><label>Amount<input name="amount" type="number" min="0.01" max="${Math.max(0, invoice.dueAmount)}" step="0.01" required></label><label>Method<select name="method"><option>Cash</option><option>Bank Transfer</option><option>Card</option><option>bKash</option><option>Nagad</option><option>Cheque</option><option>Other</option></select></label><label>Reference<input name="reference" placeholder="Txn/Cheque reference"></label><label class="span-4">Note (optional)<input name="note" placeholder="Installment note"></label><div class="span-4 actions"><button class="btn btn-primary" ${invoice.dueAmount <= 0 ? 'disabled' : ''}>Add installment</button><button class="btn btn-secondary" type="button" id="invoicePrint">Invoice PDF</button></div></form>
+      <form id="installmentForm" class="form-grid"><label>Date<input name="date" type="date" value="${today()}" required></label><label>Amount<input name="amount" type="number" min="0.01" max="${Math.max(0, invoice.dueAmount)}" step="0.01" required></label><label>Method<select name="method"><option>Cash</option><option>Bank Transfer</option><option>Card</option><option>bKash</option><option>Nagad</option><option>Cheque</option><option>Other</option></select></label><label>Reference<input name="reference" placeholder="Txn/Cheque reference"></label><label class="span-4">Note (optional)<input name="note" placeholder="Installment note"></label><div class="span-4 actions"><button class="btn btn-primary" ${invoice.dueAmount <= 0 ? 'disabled' : ''}>Add installment</button><button class="btn btn-secondary" type="button" id="invoicePrint">Invoice PDF</button><button class="btn btn-secondary" type="button" id="challanPrint">Challan PDF</button></div></form>
       <div class="section-title"><h2>Payment history</h2></div>${paymentHistoryTable(invoice, true)}</div></div>`;
     $('#closeModal').onclick = () => $('#modalRoot').innerHTML = '';
     $('#invoicePrint').onclick = () => openPrintDocument(invoice, 'invoice');
+    $('#challanPrint').onclick = () => openPrintDocument(invoice, 'challan');
     $('#installmentForm').onsubmit = async event => {
       event.preventDefault();
       const form = event.currentTarget;
@@ -425,27 +425,69 @@
       const extraByProduct = new Map();
       (room.extraFabric || []).filter(meaningful).forEach(extra => {
         const code = normalizeProductCode(extra.description).toLowerCase();
-        if (code) extraByProduct.set(code, n(extra.quantity) > 0 ? n(extra.quantity) : 1);
+        if (code) extraByProduct.set(code, (extraByProduct.get(code) || 0) + n(extra.quantity));
       });
+      const roomProducts = new Map();
       ['curtains', 'sheers'].forEach(key => (room[key] || []).filter(meaningful).forEach(item => {
         const product = normalizeProductCode(item.modelCode) || 'নামবিহীন প্রোডাক্ট';
-        const multiplier = extraByProduct.get(product.toLowerCase()) || 1;
         const yards = n(item.yards);
         const pieces = n(item.pieces) || 1;
-        const total = yards * pieces * multiplier;
-        const current = totals.get(product) || { product, calculations: [], total: 0 };
-        current.calculations.push(`${yards} × ${pieces} × ${multiplier}`);
-        current.total += total;
-        totals.set(product, current);
+        const keyName = product.toLowerCase();
+        const current = roomProducts.get(keyName) || { product, calculations: [], total: 0 };
+        current.calculations.push(`${yards} × ${pieces}`);
+        current.total += yards * pieces;
+        roomProducts.set(keyName, current);
       }));
+      extraByProduct.forEach((extra, keyName) => {
+        const current = roomProducts.get(keyName) || { product: normalizeProductCode((room.extraFabric || []).find(item => normalizeProductCode(item.description).toLowerCase() === keyName)?.description) || 'নামবিহীন প্রোডাক্ট', calculations: [], total: 0 };
+        if (extra > 0) {
+          current.extra = extra;
+          current.total += extra;
+        }
+        roomProducts.set(keyName, current);
+      });
+      roomProducts.forEach(roomProduct => {
+        const current = totals.get(roomProduct.product) || { product: roomProduct.product, calculations: [], total: 0 };
+        const base = roomProduct.calculations.length ? roomProduct.calculations.map(value => `(${value})`).join(' + ') : '0';
+        current.calculations.push(`${base}${roomProduct.extra > 0 ? ` + ${roomProduct.extra}` : ''}`);
+        current.total += roomProduct.total;
+        totals.set(roomProduct.product, current);
+      });
     });
     if (!totals.size) return '';
     const rows = [...totals.values()].map(item => `<tr><td>${cell(item.product)}</td><td>${item.calculations.join(' + ')}</td><td><strong>${item.total.toFixed(4).replace(/0+$/, '').replace(/\.$/, '')}</strong></td></tr>`).join('');
     const grand = [...totals.values()].reduce((sum, item) => sum + item.total, 0);
-    return `<section class="making-fabric-summary"><h2>মোট ফেব্রিক হিসাব</h2><table><thead><tr><th>প্রোডাক্ট</th><th>হিসাব: ফেব্রিক × পিস × এক্সট্রা ইউনিট</th><th>মোট ফেব্রিক (ইয়ার্ড)</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><th colspan="2">সর্বমোট ফেব্রিক</th><th>${grand.toFixed(4).replace(/0+$/, '').replace(/\.$/, '')} ইয়ার্ড</th></tr></tfoot></table><p>এক্সট্রা ফেব্রিক না থাকলে ইউনিট ১ ধরা হয়েছে।</p></section>`;
+    return `<section class="making-fabric-summary"><h2>মোট ফেব্রিক হিসাব</h2><table><thead><tr><th>প্রোডাক্ট</th><th>হিসাব: (ফেব্রিক × পিস) + এক্সট্রা ইউনিট</th><th>মোট ফেব্রিক (ইয়ার্ড)</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><th colspan="2">সর্বমোট ফেব্রিক</th><th>${grand.toFixed(4).replace(/0+$/, '').replace(/\.$/, '')} ইয়ার্ড</th></tr></tfoot></table><p>এক্সট্রা ফেব্রিক না থাকলে শুধু ফেব্রিক × পিস হিসাব করা হয়েছে।</p></section>`;
+  }
+
+  function challanItems(record) {
+    const items = new Map();
+    const add = (name, quantity) => {
+      const product = normalizeProductCode(name);
+      if (!product || n(quantity) <= 0) return;
+      const key = product.toLowerCase();
+      const current = items.get(key) || { product, quantity: 0 };
+      current.quantity += n(quantity);
+      items.set(key, current);
+    };
+    (record.rooms || []).forEach(room => {
+      ['curtains', 'sheers'].forEach(key => (room[key] || []).filter(meaningful).forEach(item => add(item.modelCode, n(item.pieces) || 1)));
+      ['extraFabric', 'fittings', 'accessories'].forEach(key => (room[key] || []).filter(meaningful).forEach(item => add(item.description, item.quantity)));
+    });
+    return [...items.values()];
+  }
+
+  function challanDocumentHtml(record) {
+    const rows = challanItems(record).map(item => `<tr><td>${cell(item.product)}</td><td>${cell(item.quantity)}</td></tr>`).join('');
+    return `<article class="print-document challan">
+      <header class="print-brand"><img src="../assets/img/logo/logo-01.svg" alt="Curtivelle"><strong>CHALLAN</strong></header>
+      <section class="challan-products"><table><thead><tr><th>Product</th><th>Quantity</th></tr></thead><tbody>${rows || '<tr><td colspan="2">No products</td></tr>'}</tbody></table></section>
+      <footer class="print-footer"><span>${BUSINESS_ADDRESS}</span></footer>
+    </article>`;
   }
 
   function printDocumentHtml(record, kind) {
+    if (kind === 'challan') return challanDocumentHtml(record);
     const making = kind === 'making';
     if (kind === 'invoice') normalizeInvoicePayments(record);
     const title = making ? 'মেকিং শিট' : kind === 'invoice' ? 'INVOICE' : 'QUOTATION';
@@ -474,7 +516,7 @@
     const address = String(record.customer?.address || '');
     const knownAreas = ['Mirpur','Gulshan','Banani','Uttara','Dhanmondi','Bashundhara','Mohammadpur','Badda','Baridhara','Khilgaon','Motijheel','Wari','Mohakhali'];
     const location = knownAreas.find(area => new RegExp(area, 'i').test(address)) || address.split(',').map(x => x.trim()).find(Boolean) || 'Dhaka';
-    const type = kind === 'making' ? 'Making' : kind === 'invoice' ? 'Invoice' : 'Quotation';
+    const type = kind === 'making' ? 'Making' : kind === 'invoice' ? 'Invoice' : kind === 'challan' ? 'Challan' : 'Quotation';
     return `${safeFilePart(location)}_${safeFilePart(record.customer?.name)}_${type}`;
   }
 
@@ -482,7 +524,7 @@
     const previousTitle = document.title;
     const filename = printFileName(record, kind);
     document.title = filename;
-    $('#modalRoot').innerHTML = `<div class="modal-backdrop print-backdrop"><div class="modal print-modal"><div class="card-head no-print"><h2>${kind === 'making' ? 'Making Sheet' : kind === 'invoice' ? 'Invoice' : 'Quotation'} Preview</h2><button class="icon-btn" id="closeModal">×</button></div>${printDocumentHtml(record, kind)}<div class="actions no-print print-actions"><button class="btn btn-primary" id="modalPrint">Print / Save PDF</button></div></div></div>`;
+    $('#modalRoot').innerHTML = `<div class="modal-backdrop print-backdrop"><div class="modal print-modal"><div class="card-head no-print"><h2>${kind === 'making' ? 'Making Sheet' : kind === 'invoice' ? 'Invoice' : kind === 'challan' ? 'Challan' : 'Quotation'} Preview</h2><button class="icon-btn" id="closeModal">×</button></div>${printDocumentHtml(record, kind)}<div class="actions no-print print-actions"><button class="btn btn-primary" id="modalPrint">Print / Save PDF</button></div></div></div>`;
     $('#closeModal').onclick = () => { $('#modalRoot').innerHTML = ''; document.title = previousTitle; };
     $('#modalPrint').onclick = () => { document.title = filename; window.print(); };
   }

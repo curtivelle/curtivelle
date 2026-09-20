@@ -199,6 +199,11 @@ textarea { resize: vertical; min-height: 80px; }
 .making-fabric-summary thead th { background: var(--green); color: #fff; }
 .making-fabric-summary tfoot th { background: #edf3f0; color: var(--green); text-align: right; }
 .making-fabric-summary p { margin: 6px 0 0; color: var(--muted); font-size: 9px; }
+.challan-products { margin: 28px 0; }
+.challan-products table { width: 100%; table-layout: fixed; font-size: 13px; }
+.challan-products th, .challan-products td { padding: 10px 8px; white-space: normal; }
+.challan-products thead th { background: var(--green); color: #fff; }
+.challan-products th:last-child, .challan-products td:last-child { width: 120px; text-align: center; }
 
 @media print {
   @page { size: A4 portrait; margin: 9mm; }
