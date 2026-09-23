@@ -24,14 +24,14 @@ RewriteRule ^interior-based-curtain/(residential-curtain|commercial-curtain|hosp
 RewriteCond %{THE_REQUEST} \s/+(.*/)?interior-based-curtain/(?:residential-curtain|commercial-curtain|hospitality-curtain)/+[?\s] [NC]
 RewriteRule ^interior-based-curtain/(residential-curtain|commercial-curtain|hospitality-curtain)/$ /%1interior-based-curtain/$1 [R=301,L,NE]
 RewriteRule ^interior-based-curtain/(residential-curtain|commercial-curtain|hospitality-curtain)$ interior-based-curtain/$1.html [END]
-# Washroom curtain child URL: redirect legacy flat slugs and serve the clean nested URL.
-RewriteCond %{THE_REQUEST} \s/+(.*/)?(?:washroom-curtain)(?:\.html)?/?[?\s] [NC]
-RewriteRule ^(washroom-curtain)(?:\.html)?/?$ /%1interior-based-curtain/residential-curtain/$1 [R=301,L,NE]
-RewriteCond %{THE_REQUEST} \s/+(.*/)?interior-based-curtain/residential-curtain/(?:washroom-curtain)\.html/?[?\s] [NC]
-RewriteRule ^interior-based-curtain/residential-curtain/(washroom-curtain)\.html/?$ /%1interior-based-curtain/residential-curtain/$1 [R=301,L,NE]
-RewriteCond %{THE_REQUEST} \s/+(.*/)?interior-based-curtain/residential-curtain/(?:washroom-curtain)/+[?\s] [NC]
-RewriteRule ^interior-based-curtain/residential-curtain/(washroom-curtain)/$ /%1interior-based-curtain/residential-curtain/$1 [R=301,L,NE]
-RewriteRule ^interior-based-curtain/residential-curtain/(washroom-curtain)$ interior-based-curtain/residential-curtain/$1.html [END]
+# Residential curtain child URLs: redirect legacy flat slugs and serve clean nested URLs.
+RewriteCond %{THE_REQUEST} \s/+(.*/)?(?:washroom-curtain|balcony-and-sliding-door-curtain)(?:\.html)?/?[?\s] [NC]
+RewriteRule ^(washroom-curtain|balcony-and-sliding-door-curtain)(?:\.html)?/?$ /%1interior-based-curtain/residential-curtain/$1 [R=301,L,NE]
+RewriteCond %{THE_REQUEST} \s/+(.*/)?interior-based-curtain/residential-curtain/(?:washroom-curtain|balcony-and-sliding-door-curtain)\.html/?[?\s] [NC]
+RewriteRule ^interior-based-curtain/residential-curtain/(washroom-curtain|balcony-and-sliding-door-curtain)\.html/?$ /%1interior-based-curtain/residential-curtain/$1 [R=301,L,NE]
+RewriteCond %{THE_REQUEST} \s/+(.*/)?interior-based-curtain/residential-curtain/(?:washroom-curtain|balcony-and-sliding-door-curtain)/+[?\s] [NC]
+RewriteRule ^interior-based-curtain/residential-curtain/(washroom-curtain|balcony-and-sliding-door-curtain)/$ /%1interior-based-curtain/residential-curtain/$1 [R=301,L,NE]
+RewriteRule ^interior-based-curtain/residential-curtain/(washroom-curtain|balcony-and-sliding-door-curtain)$ interior-based-curtain/residential-curtain/$1.html [END]
 # Serve the seasonal curtain landing page at /seasonal-curtain, like the blog landing page.
 RewriteCond %{THE_REQUEST} \s/+(.*/)?seasonal-curtain/+[?\s] [NC]
 RewriteRule ^seasonal-curtain/$ /%1seasonal-curtain [R=301,L,NE]
