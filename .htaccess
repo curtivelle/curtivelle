@@ -64,6 +64,14 @@ RewriteRule ^service-area/kolabagan\.html/?$ /%1service-area/kolabagan [R=301,L,
 RewriteCond %{THE_REQUEST} \s/+(.*/)?service-area/kolabagan/+[?\s] [NC]
 RewriteRule ^service-area/kolabagan/$ /%1service-area/kolabagan [R=301,L,NE]
 RewriteRule ^service-area/kolabagan$ service-area/kolabagan.html [END]
+# Mirpur and Diabari city pages: clean canonical URLs.
+RewriteCond %{THE_REQUEST} \s/+(.*/)?(?:mirpur|diabari)(?:\.html)?/?[?\s] [NC]
+RewriteRule ^(mirpur|diabari)(?:\.html)?/?$ /%1service-area/$1 [R=301,L,NE]
+RewriteCond %{THE_REQUEST} \s/+(.*/)?service-area/(?:mirpur|diabari)\.html/?[?\s] [NC]
+RewriteRule ^service-area/(mirpur|diabari)\.html/?$ /%1service-area/$1 [R=301,L,NE]
+RewriteCond %{THE_REQUEST} \s/+(.*/)?service-area/(?:mirpur|diabari)/+[?\s] [NC]
+RewriteRule ^service-area/(mirpur|diabari)/$ /%1service-area/$1 [R=301,L,NE]
+RewriteRule ^service-area/(mirpur|diabari)$ service-area/$1.html [END]
 # Correct the legacy Bonosree service-area slug.
 RewriteCond %{THE_REQUEST} \s/+(.*/)?curtain-shop-in-bonosree(?:\.html)?/?[?\s] [NC]
 RewriteRule ^curtain-shop-in-bonosree(?:\.html)?/?$ /%1service-area/curtain-shop-in-banasree [R=301,L,NE]
