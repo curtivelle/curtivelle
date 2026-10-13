@@ -838,6 +838,12 @@
 
 
 	});
+	const slider3Dots = document.querySelectorAll('.home-slider-custom .tp-slider-dots .swiper-pagination-bullet');
+	slider3Dots.forEach((dot, index) => {
+		dot.addEventListener('mouseenter', () => {
+			slider3swiper.slideToLoop(index);
+		});
+	});
 	// 13. Swiper Js
 	const slider2swiper = new Swiper('.tp-slider-2-active', {
 		// Optional parameters
