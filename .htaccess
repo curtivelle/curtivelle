@@ -99,6 +99,12 @@ RewriteCond %{THE_REQUEST} \s/+(.*/)?blog/flat-janalar-map-nebo-kibhabe/?[?\s] [
 RewriteRule ^blog/flat-janalar-map-nebo-kibhabe/?$ /%1blog/how-to-measure-windows-for-curtains-in-apartment [R=301,L,NE]
 RewriteCond %{THE_REQUEST} \s/+(.*/)?blog/dhakay-parda-kenar-age-jana-bishoy/?[?\s] [NC]
 RewriteRule ^blog/dhakay-parda-kenar-age-jana-bishoy/?$ /%1blog/things-to-know-before-buying-curtains-in-dhaka [R=301,L,NE]
+# New blog articles: keep clean, extension-less URLs canonical and serve their HTML files.
+RewriteCond %{THE_REQUEST} \s/+(.*/)?blog/(?:office-curtain-guide|are-acoustic-curtains-effective)\.html/?[?\s] [NC]
+RewriteRule ^blog/(office-curtain-guide|are-acoustic-curtains-effective)\.html/?$ /%1blog/$1 [R=301,L,NE]
+RewriteCond %{THE_REQUEST} \s/+(.*/)?blog/(?:office-curtain-guide|are-acoustic-curtains-effective)/+[?\s] [NC]
+RewriteRule ^blog/(office-curtain-guide|are-acoustic-curtains-effective)/$ /%1blog/$1 [R=301,L,NE]
+RewriteRule ^blog/(office-curtain-guide|are-acoustic-curtains-effective)$ blog/$1.html [END]
 RewriteRule ^blog/(winter-curtain-fabric-bangladesh|online-cotton-curtain-store-in-bangladesh|how-to-measure-windows-for-curtains-in-apartment|things-to-know-before-buying-curtains-in-dhaka)$ blog/$1.html [END]
 RewriteRule ^blog/(best-curtain-for-rainy-weather|best-living-room-curtains-guide|what-is-custom-curtain|top-10-curtain-brands-in-bangladesh|best-curtain-fabric-for-bangladesh-weather|luxury-curtain-does-not-mean-expensive|motorised-curtain-luxury-or-practical-investment|blackout-curtain-benefits-bangladesh-bedrooms|best-curtain-for-west-facing-room|why-curtains-look-cheap-expensive-fabric|common-mistakes-people-make-when-choosing-curtains)$ blog/$1.html [END]
 RewriteCond %{THE_REQUEST} \s/+(.*/)?(?:best-curtain-for-winter-weather|best-curtains-for-hot-weather|best-dining-room-curtain|best-office-curtains|curtain-cleaning-guide|curtain-price-in-bangladesh|hotel-curtain|how-to-measure-a-window-for-curtains|luxury-bedroom-curtain-bangladesh|premium-living-room-curtain|resort-curtain|small-bedroom-curtains)(?:[?\s]) [NC]
