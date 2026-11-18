@@ -649,6 +649,39 @@
             background: #f8f3ea;
         }
 
+        @media (max-width: 767px) {
+            .custom-curtain-page .rw-comparison-wrap {
+                overflow: visible;
+            }
+
+            .custom-curtain-page .rw-comparison,
+            .custom-curtain-page .rw-comparison tbody,
+            .custom-curtain-page .rw-comparison tr,
+            .custom-curtain-page .rw-comparison td {
+                display: block;
+                width: 100%;
+                min-width: 0;
+                box-sizing: border-box;
+            }
+
+            .custom-curtain-page .rw-comparison td {
+                padding: 16px;
+                overflow-wrap: anywhere;
+            }
+
+            .custom-curtain-page .rw-comparison td + td {
+                border-top: 0;
+            }
+
+            .custom-curtain-page .rw-comparison td p:last-child {
+                margin-bottom: 0;
+            }
+
+            .custom-curtain-page .rw-comparison td h3 {
+                margin-top: 0;
+            }
+        }
+
         .custom-curtain-page .rw-faq-item {
             padding: 24px 0;
             border-bottom: 1px solid rgba(197, 163, 103, .35);
